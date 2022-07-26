@@ -12,7 +12,7 @@ use Magento\Framework\App\ProductMetadata;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\App\ResourceConnection;
 
-class CreateCategoryWithId
+class CreateCategoryWithoutId
 {
     /** @var string */
     const SEQUENCE_TABLE_NAME = 'sequence_catalog_category';
@@ -43,46 +43,60 @@ class CreateCategoryWithId
     }
 
     /**
-     * @param int $id
+     * @return int
      */
-    public function execute(int $id)
+    public function execute(): int
     {
         if ($this->productMetadata->getEdition() !== ProductMetadata::EDITION_NAME) {
-            $this->insertCategorySequence($id);
+            $id = $this->insertCategorySequence();
+            $this->insertCategoryEntity($id);
+        } else {
+            $id = $this->insertCategoryEntity();
         }
-        $this->insertCategoryEntity($id);
+
+        return (int)$id;
     }
 
     /**
-     * @param int $id
+     * @return int
      */
-    private function insertCategorySequence(int $id)
+    private function insertCategorySequence(): int
     {
         $tableName = $this->resourceConnection->getTablePrefix()
             . $this->resourceConnection->getTableName(self::SEQUENCE_TABLE_NAME);
         $connection = $this->resourceConnection->getConnection();
-        $connection->insert($tableName, [
-            'sequence_value' => $id
-        ]);
+        $connection->insert($tableName, []);
+        return (int)$connection->lastInsertId();
     }
 
     /**
-     * @param int $entityId
+     * @param int|null $entityId
+     * @return void
      */
-    private function insertCategoryEntity(int $entityId)
+    private function insertCategoryEntity(int $entityId = null): int
     {
         $tableName = $this->resourceConnection->getTablePrefix()
             . $this->resourceConnection->getTableName(self::TABLE_NAME);
+
         $connection = $this->resourceConnection->getConnection();
-        $connection->insert($tableName, [
-            'entity_id' => $entityId,
-            'row_id' => $entityId,
+        $data = [
             'attribute_set_id' => 3,
-            'parent_id' => 2,
-            'path' => '1/2/' . $entityId,
-            'position' => 1,
-            'level' => 3,
+            'parent_id' => 0,
+            'path' => '0/99999',
+            'position' => 0,
+            'level' => 0,
             'children_count' => 0,
-        ]);
+        ];
+
+        if ($entityId) {
+            $data['path'] = '0/' . $entityId;
+            $data['entity_id'] = $entityId;
+            if ($this->productMetadata->getEdition() !== ProductMetadata::EDITION_NAME) {
+                $data['row_id'] = $entityId;
+            }
+        }
+        $connection->insert($tableName, $data);
+
+        return $entityId ?: (int)$connection->lastInsertId();
     }
 }
