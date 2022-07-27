@@ -87,9 +87,9 @@ class SetProductCategoriesByProductSkuAndCategoryIds
 
     /**
      * @param int $categoryId
-     * @return string
+     * @return string|null
      */
-    private function getCategoryProductPosition(int $categoryId): string
+    private function getCategoryProductPosition(int $categoryId): ?string
     {
         $connection = $this->resourceConnection->getConnection();
 
