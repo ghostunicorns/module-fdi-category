@@ -40,6 +40,7 @@ class GetCategoryIdByCategoryPathArray
         foreach ($categoriesPathArray as $categoryName) {
             $level++;
             $collection = $this->categoryCollectionFactory->create()
+                ->setStoreId(0)
                 ->addAttributeToFilter('parent_id', $categoryId)
                 ->addAttributeToFilter('name', $categoryName)
                 ->addAttributeToFilter('level', $level)
